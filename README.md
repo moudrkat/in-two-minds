@@ -81,7 +81,36 @@ agree from the middle of the stack on. One figure, all of it:
 ![three questions, six lens columns: sure vs hesitating vs changed-its-mind](docs/fig_hesitation_en.png)
 
 (`fig/extract.py` + `fig/render.py` regenerate this from your own traces;
-`render.py cz` for the Czech variant.)
+`render.py cz` for the Czech variant, `render.py logit` for a
+logit-lens-only version.)
+
+## Foresight: the banned word is still in the machine
+
+`foresight.py` pushes the J-lens where the logit lens can't follow. The
+agent must open with one neutral sentence — tool names and verbs like
+*calculate* explicitly forbidden — and only then call a tool. While the
+sentence is being written, the tool call doesn't exist yet; the logit
+lens (next word) has nothing to see. The J-lens still catches the
+concept: at the verb slot, exactly where "calculate" would go if it were
+allowed, the calculate/calculator word family shows up — a suppressed
+next-word candidate in the logit lens (p≈0.1–0.2) and 2–4× stronger in
+the J-lens (p≈0.3–0.4), held toward the calculator call written 11–15
+tokens later. The same probe on a search question stays dark, so the
+mass is the calculation concept, not generic tool-call noise.
+
+![the sentence the agent wrote, and the banned concept under it](docs/fig_foresight_en.png)
+
+```bash
+brainscope --model qwen3-4b --traces traces/ --lens on --jlens lenses/qwen3-4b.jlens.pt
+python foresight.py                      # needs the J-lens loaded
+python foresight.py --dump fig/foresight.json   # + data for the figure
+```
+
+It uses two brainscope features under the hood: per-trace hidden-state
+capture (exact readouts instead of stored top-5 lower bounds) and
+word-family emergence tracking (`?token=calculator,calculate,calc` sums
+the family — mid-sentence a model holds concepts, not exact tokens; the
+literal token `calculator` alone reads ~0.00 there).
 
 Then open the brainscope UI, traces tab, click the tool-name token and look
 down the logit-lens column — the same story, in color, scrubbing token by
