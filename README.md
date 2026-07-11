@@ -61,7 +61,20 @@ other tool. The clear cases don't care.
 
 Then open the brainscope UI, traces tab, click the tool-name token and look
 down the logit-lens column — the same story, in color, scrubbing token by
-token.
+token. This is `torn_leap_ms`, scrubbed to the moment the model wrote `web`:
+
+![replay of torn_leap_ms: layers 24-34 say calculator, the top two flip to web](docs/replay-torn-leap-ms.png)
+
+Layers 24–34 all say *calculator / calculate*; the decision flips in the
+last two layers. Side by side, the same column for a clear call and the two
+torn ones (bottom = layer 1, top = layer 36 = what gets sampled):
+
+| `calc_clear` → calculator | `torn_boiling` → web_search | `torn_leap_ms` → web_search |
+|---|---|---|
+| ![calculator wins from layer 24](docs/lens-calc-clear.png) | ![lookup and calculator through the middle, web flip-flops late](docs/lens-torn-boiling.png) | ![calculate all the way up, web only in the last two rows](docs/lens-torn-leap-ms.png) |
+
+(`torn_boiling` bonus: mid-stack the model is reaching for `lookup` — a
+tool that doesn't exist.)
 
 ## Why this matters for production agents
 
