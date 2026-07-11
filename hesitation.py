@@ -70,12 +70,12 @@ def choice_step(all_tokens: list[str]) -> int | None:
     return None
 
 
-def analyze(trace: dict) -> dict | None:
+def analyze(trace: dict, key: str = "lens") -> dict | None:
     step = choice_step(trace["all_tokens"])
     if step is None:
         return None
     lens_idx = step - trace.get("capture_offset", 0)
-    lens = trace.get("lens") or []
+    lens = trace.get(key) or []
     if not (0 <= lens_idx < len(lens)) or lens[lens_idx] is None:
         return None
 
@@ -161,6 +161,11 @@ def main():
               + (f"   rival alive in {r['early_steps']} earlier steps "
                  f"(p<={r['early_peak']:.2f})" if r["early_steps"] else "")
               + f"   [{r['trace_id']}]")
+        j = analyze(trace, "jlens") if trace.get("jlens") else None
+        if j:   # server ran with --jlens: the transported "will say later" readout
+            print(f"{'':<15} {'J-lens':<11} {j['strip']}   "
+                  f"rival {j['rival']} peaks p={j['rival_peak']:.2f}"
+                  + (f" @L{j['rival_layer']}" if j['rival_layer'] is not None else ""))
 
     print("\nReplay any trace in the browser: open brainscope, traces tab, "
           "click the tool-name token, look down the logit-lens column.")

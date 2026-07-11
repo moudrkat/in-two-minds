@@ -59,6 +59,30 @@ moment. How contested these are shows up another way too: changing a
 hyphen to an em-dash in the system prompt flipped `torn_leap_ms` to the
 other tool. The clear cases don't care.
 
+## Second opinion: the J-lens
+
+Start brainscope with a fitted [J-lens](https://github.com/moudrkat/brainscope/blob/main/docs/jlens.md)
+(`--jlens lenses/<model>.jlens.pt`) and `hesitation.py` prints a second
+strip per case — the Jacobian-lens readout: not "what would this layer
+say now" but "what is this layer pushing the model to say *later*". On
+the torn cases it makes the hesitation unmistakable:
+
+```
+torn_leap_ms    web_search  ...............................CCCWW
+                settles L34/36   decision margin +0.91   rival calculator peaks p=0.85 @L31
+                J-lens      ..........................CCCCCCCCCW   rival calculator peaks p=1.00 @L33
+```
+
+At layer 35 of 36 the J-lens still reads "calculator is coming" at
+p≈1.0; the last layer overrides it and the model writes `web_search`.
+On the clear cases the J-lens rival stays at 0.00 — the two lenses
+agree from the middle of the stack on. One figure, all of it:
+
+![three questions, six lens columns: sure vs hesitating vs changed-its-mind](docs/fig_hesitation_en.png)
+
+(`fig/extract.py` + `fig/render.py` regenerate this from your own traces;
+`render.py cz` for the Czech variant.)
+
 Then open the brainscope UI, traces tab, click the tool-name token and look
 down the logit-lens column — the same story, in color, scrubbing token by
 token. This is `torn_leap_ms`, scrubbed to the moment the model wrote `web`:
