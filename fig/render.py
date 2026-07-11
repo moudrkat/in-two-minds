@@ -20,6 +20,7 @@ C_CALC, C_WEB = "#c98500", "#3987e5"
 LAYERS = range(20, 36)          # 0-based -> shown as L21..L36
 
 CZ = "cz" in sys.argv[1:]
+LOGIT_ONLY = "logit" in sys.argv[1:]   # single-lens variant of the figure
 
 T = {
     "title": "Three questions. Three clean tool calls. One changed its mind at the last layer.",
@@ -59,11 +60,36 @@ if CZ:
                  "tohle ilustruje; měřit znamená zasáhnout (steer & rerun) · brainscope — github.com/moudrkat/brainscope",
     }
 
+if LOGIT_ONLY:
+    # single-readout story: verdicts/callouts must not reference the J-lens
+    T["subtitle"] = ("An agent picks between calculator and web_search — what every layer would answer, "
+                     "at the moment it writes the tool name" if not CZ else
+                     "Agent volí mezi calculator a web_search — co by odpověděla každá vrstva "
+                     "ve chvíli, kdy píše jméno toolu")
+    T["v1"] = ("SURE — calculator from\nlayer 27, never looks back." if not CZ else
+               "JISTÝ — calculator od vrstvy 27,\nuž se neohlédne.")
+    T["v2"] = ("HESITATES — mid-stack it\nreaches for “lookup”, a tool\nit doesn't even have, then\nflip-flops calculator ↔ web." if not CZ else
+               "VÁHÁ — uprostřed sahá po\n„lookup“, toolu, který vůbec\nnemá, pak přeskakuje\ncalculator ↔ web až do konce.")
+    T["v3"] = ("CHANGES ITS MIND —\ncalculator is winning through\nlayer 34 (p up to 0.85);\nthe last two layers flip it." if not CZ else
+               "ROZMYSLÍ SI TO — až do\nvrstvy 34 vede calculator\n(p až 0,85); poslední dvě\nvrstvy to překlopí.")
+    T["callout1"] = ("two layers before the output,\n“calculator” is still winning" if not CZ else
+                     "dvě vrstvy před výstupem\npořád vede „calculator“")
+    T["callout2"] = ("the last two layers flip it" if not CZ else
+                     "poslední dvě vrstvy to překlopí")
+    T["foot1"] = ("logit lens (nostalgebraist 2020): what the model would emit if it stopped at this layer"
+                  if not CZ else
+                  "logit lens (nostalgebraist 2020): co by model vypsal, kdyby výpočet skončil v této vrstvě")
+
+Q2 = (["What's the average of", "the boiling points of", "water and ethanol, in °C?"]
+      if LOGIT_ONLY else
+      ["What's the average of the boiling", "points of water and ethanol, in °C?"])
 CASES = [
     ("calc_clear", ["What is 847 × 391?"], "calculator", T["v1"]),
-    ("torn_boiling", ["What's the average of the boiling", "points of water and ethanol, in °C?"], "web_search", T["v2"]),
+    ("torn_boiling", Q2, "web_search", T["v2"]),
     ("torn_leap_ms", ["How many milliseconds", "are in a leap year?"], "web_search", T["v3"]),
 ]
+COLS = [("lens", T["lens_label"])] if LOGIT_ONLY else \
+       [("lens", T["lens_label"]), ("jlens", T["jlens_label"])]
 
 
 def classify(tok: str) -> str | None:
@@ -77,8 +103,9 @@ def classify(tok: str) -> str | None:
     return None
 
 
-COL_W, CELL_H, GAP = 2.05, 0.46, 0.75
-GROUP_W = 2 * COL_W + 0.1
+COL_W, CELL_H = 2.05, 0.46
+GAP = 1.6 if LOGIT_ONLY else 0.75   # narrow groups need wider gutters for the headers
+GROUP_W = len(COLS) * COL_W + (len(COLS) - 1) * 0.1
 
 fig_w = 3 * GROUP_W + 2 * GAP + 3.2
 n_rows = len(LAYERS)
@@ -133,13 +160,13 @@ for gi, (case, qlines, picked, verdict) in enumerate(CASES):
     qy = top + 1.30 + (len(qlines) - 1) * 0.15
     for li, line in enumerate(qlines):
         ax.text(gx + GROUP_W / 2, qy - li * 0.30, line, ha="center", va="center",
-                color=INK, fontsize=11.5, family="sans-serif", fontweight="bold")
+                color=INK, fontsize=(10.5 if LOGIT_ONLY else 11.5), family="sans-serif", fontweight="bold")
     chip_c = C_CALC if picked == "calculator" else C_WEB
     ax.text(gx + GROUP_W / 2, top + 0.68, f"{T['calls']}  {picked}", ha="center", va="center",
             color=chip_c, fontsize=11, family="monospace", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.35", fc=SURFACE, ec=chip_c, lw=1.4))
 
-    for ci, (key, label) in enumerate([("lens", T["lens_label"]), ("jlens", T["jlens_label"])]):
+    for ci, (key, label) in enumerate(COLS):
         cx = gx + ci * (COL_W + 0.1)
         ax.text(cx + COL_W / 2, top + 0.24, label, ha="center", va="center",
                 color=INK2, fontsize=9.5, family="sans-serif", linespacing=1.25)
@@ -172,12 +199,12 @@ for gi, (case, qlines, picked, verdict) in enumerate(CASES):
 
     # verdict under the group
     ax.text(gx + GROUP_W / 2, y0 - 0.66, verdict, ha="center", va="top",
-            color=INK2, fontsize=9.8, family="sans-serif", linespacing=1.45)
+            color=INK2, fontsize=(9.2 if LOGIT_ONLY else 9.8), family="sans-serif", linespacing=1.45)
 
-# ---------------- callout on torn_leap_ms J-lens L33–35
+# ---------------- callout on torn_leap_ms: J-lens L33–35, or lens L32–L34
 gx2 = x0 + 2 * (GROUP_W + GAP)
-jx = gx2 + COL_W + 0.1
-box_y = y0 + (32 - LAYERS[0]) * CELL_H
+jx = gx2 if LOGIT_ONLY else gx2 + COL_W + 0.1
+box_y = y0 + ((31 if LOGIT_ONLY else 32) - LAYERS[0]) * CELL_H
 ax.add_patch(FancyBboxPatch((jx - 0.05, box_y - 0.02), COL_W + 0.1, 3 * CELL_H + 0.04,
                             boxstyle="round,pad=0.02,rounding_size=0.08",
                             fc="none", ec=INK, lw=1.8))
@@ -200,6 +227,6 @@ ax.text(x0 - 0.9, 0.30,
         T["foot2"],
         color=MUTED, fontsize=9.5, family="sans-serif")
 
-fig.savefig(f"{SCRATCH}/fig_hesitation_" + ("cz" if CZ else "en") + ".png", facecolor=PAGE,
-            bbox_inches="tight", pad_inches=0.25)
-print("saved", "cz" if CZ else "en")
+name = "fig_hesitation_" + ("logit_" if LOGIT_ONLY else "") + ("cz" if CZ else "en")
+fig.savefig(f"{SCRATCH}/{name}.png", facecolor=PAGE, bbox_inches="tight", pad_inches=0.25)
+print("saved", name)
