@@ -21,6 +21,7 @@ LAYERS = range(20, 36)          # 0-based -> shown as L21..L36
 
 CZ = "cz" in sys.argv[1:]
 LOGIT_ONLY = "logit" in sys.argv[1:]   # single-lens variant of the figure
+TUNED = "tuned" in sys.argv[1:]        # three-lens variant: raw | tuned | J-lens
 
 T = {
     "title": "Three questions. Three clean tool calls. One changed its mind at the last layer.",
@@ -30,6 +31,7 @@ T = {
     "layers_note": "⋮ layers 1–20: no tool signal yet", "depth": "layer (depth →)",
     "calls": "calls",
     "lens_label": "logit lens\n“would say now”", "jlens_label": "J-lens\n“pushed toward later”",
+    "tlens_label": "tuned lens\n“corrected readout”",
     "v1": "SURE — from layer 27 up, both\nreadouts have calculator on top\nand it never changes.",
     "v2": "HESITATES — mid-stack it reaches for\n“lookup”, a tool it doesn't even have,\nthen flip-flops calculator ↔ web.",
     "v3": "CHANGES ITS MIND — at layer 35 of 36\nthe J-lens still says “calculator is coming”\n(p ≈ 1.0); the last layer overrides it.",
@@ -49,6 +51,7 @@ if CZ:
         "layers_note": "⋮ vrstvy 1–20: po toolech ani stopa", "depth": "vrstva (hloubka →)",
         "calls": "volá",
         "lens_label": "logit lens\n„co by řekl teď“", "jlens_label": "J-lens\n„k čemu tlačí později“",
+        "tlens_label": "tuned lens\n„opravený readout“",
         "v1": "JISTÝ — od vrstvy 27 mají oba\nreadouty na špici calculator\na už se to nezmění.",
         "v2": "VÁHÁ — uprostřed sahá po „lookup“,\ntoolu, který vůbec nemá, pak přeskakuje\ncalculator ↔ web až do konce.",
         "v3": "ROZMYSLÍ SI TO — ve vrstvě 35 z 36\nJ-lens pořád říká „přijde calculator“ (p ≈ 1,0);\nposlední vrstva to přepíše.",
@@ -85,6 +88,19 @@ if LOGIT_ONLY:
                   "skončilo tam · Qwen3-4B, greedy · brainscope — github.com/moudrkat/brainscope")
     T["foot2"] = ""
 
+if TUNED:
+    # the raw lens's known weakness, its trained fix, and an independent
+    # second opinion — same verdicts in all three columns
+    T["v1"] = ("SURE — from layer 29 up, all three\nreadouts have calculator on top\nand it never changes." if not CZ else
+               "JISTÝ — od vrstvy 29 mají všechny tři\nreadouty na špici calculator\na už se to nezmění.")
+    T["foot1"] = ("logit lens: raw readout — what each layer would emit   ·   "
+                  "tuned lens (Belrose et al. 2023): the same readout with trained per-layer corrections   ·   "
+                  "J-lens (Anthropic 2026): what the layer pushes the model to say later"
+                  if not CZ else
+                  "logit lens: surový readout — co by vrstva vypsala   ·   "
+                  "tuned lens (Belrose et al. 2023): týž readout s natrénovanou korekcí po vrstvách   ·   "
+                  "J-lens (Anthropic 2026): k čemu vrstva tlačí model později")
+
 Q2 = (["What's the average of", "the boiling points of", "water and ethanol, in °C?"]
       if LOGIT_ONLY else
       ["What's the average of the boiling", "points of water and ethanol, in °C?"])
@@ -94,6 +110,7 @@ CASES = [
     ("torn_leap_ms", ["How many milliseconds", "are in a leap year?"], "web_search", T["v3"]),
 ]
 COLS = [("lens", T["lens_label"])] if LOGIT_ONLY else \
+       [("lens", T["lens_label"]), ("tlens", T["tlens_label"]), ("jlens", T["jlens_label"])] if TUNED else \
        [("lens", T["lens_label"]), ("jlens", T["jlens_label"])]
 
 
@@ -208,7 +225,7 @@ for gi, (case, qlines, picked, verdict) in enumerate(CASES):
 
 # ---------------- callout on torn_leap_ms: J-lens L33–35, or lens L32–L34
 gx2 = x0 + 2 * (GROUP_W + GAP)
-jx = gx2 if LOGIT_ONLY else gx2 + COL_W + 0.1
+jx = gx2 + [k for k, _ in COLS].index("jlens" if not LOGIT_ONLY else "lens") * (COL_W + 0.1)
 box_y = y0 + ((31 if LOGIT_ONLY else 32) - LAYERS[0]) * CELL_H
 ax.add_patch(FancyBboxPatch((jx - 0.05, box_y - 0.02), COL_W + 0.1, 3 * CELL_H + 0.04,
                             boxstyle="round,pad=0.02,rounding_size=0.08",
@@ -232,6 +249,6 @@ ax.text(x0 - 0.9, 0.30,
         T["foot2"],
         color=MUTED, fontsize=9.5, family="sans-serif")
 
-name = "fig_hesitation_" + ("logit_" if LOGIT_ONLY else "") + ("cz" if CZ else "en")
+name = "fig_hesitation_" + ("logit_" if LOGIT_ONLY else "tuned_" if TUNED else "") + ("cz" if CZ else "en")
 fig.savefig(f"{SCRATCH}/{name}.png", facecolor=PAGE, bbox_inches="tight", pad_inches=0.25)
 print("saved", name)
