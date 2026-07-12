@@ -61,24 +61,29 @@ if CZ:
     }
 
 if LOGIT_ONLY:
-    # single-readout story: verdicts/callouts must not reference the J-lens
-    T["subtitle"] = ("An agent picks between calculator and web_search — what every layer would answer, "
-                     "at the moment it writes the tool name" if not CZ else
-                     "Agent volí mezi calculator a web_search — co by odpověděla každá vrstva "
-                     "ve chvíli, kdy píše jméno toolu")
-    T["v1"] = ("SURE — calculator from\nlayer 27, never looks back." if not CZ else
-               "JISTÝ — calculator od vrstvy 27,\nuž se neohlédne.")
-    T["v2"] = ("HESITATES — mid-stack it\nreaches for “lookup”, a tool\nit doesn't even have, then\nflip-flops calculator ↔ web." if not CZ else
-               "VÁHÁ — uprostřed sahá po\n„lookup“, toolu, který vůbec\nnemá, pak přeskakuje\ncalculator ↔ web až do konce.")
-    T["v3"] = ("CHANGES ITS MIND —\ncalculator is winning through\nlayer 34 (p up to 0.85);\nthe last two layers flip it." if not CZ else
-               "ROZMYSLÍ SI TO — až do\nvrstvy 34 vede calculator\n(p až 0,85); poslední dvě\nvrstvy to překlopí.")
-    T["callout1"] = ("two layers before the output,\n“calculator” is still winning" if not CZ else
-                     "dvě vrstvy před výstupem\npořád vede „calculator“")
-    T["callout2"] = ("the last two layers flip it" if not CZ else
-                     "poslední dvě vrstvy to překlopí")
-    T["foot1"] = ("logit lens (nostalgebraist 2020): what the model would emit if it stopped at this layer"
+    # single-readout story, tuned for a feed: one idea, minimal text
+    T["title"] = ("Three tool calls. Same clean JSON. One flipped at the last layer." if not CZ else
+                  "Tři tool cally. Stejně čistý JSON. Jeden se překlopil v poslední vrstvě.")
+    T["subtitle"] = ("each layer of the model gets to answer early — read at the token "
+                     "where the agent writes the tool name" if not CZ else
+                     "každá vrstva modelu smí odpovědět předčasně — čteno na tokenu, "
+                     "kde agent píše jméno toolu")
+    T["v1"] = ("clear question —\ndecided by layer 27" if not CZ else
+               "jasná otázka —\nrozhodnuto od vrstvy 27")
+    T["v2"] = ("contested — mid-stack it reaches\nfor “lookup”, a tool it doesn't have" if not CZ else
+               "sporná — uprostřed sahá po „lookup“,\ntoolu, který nemá")
+    T["v3"] = ("calculator wins until two layers\nfrom the end — then it flips" if not CZ else
+               "až dvě vrstvy před koncem\nvede calculator — pak přeskočí")
+    T["callout1"] = ("two layers from the output,\ncalculator is still winning" if not CZ else
+                     "dvě vrstvy před výstupem\npořád vede calculator")
+    T["callout2"] = ("the output says web_search" if not CZ else
+                     "výstup říká web_search")
+    T["foot1"] = ("raw logit lens — an approximate readout: what each layer would answer if generation "
+                  "stopped there · Qwen3-4B, greedy · brainscope — github.com/moudrkat/brainscope"
                   if not CZ else
-                  "logit lens (nostalgebraist 2020): co by model vypsal, kdyby výpočet skončil v této vrstvě")
+                  "raw logit lens — přibližný readout: co by každá vrstva odpověděla, kdyby generování "
+                  "skončilo tam · Qwen3-4B, greedy · brainscope — github.com/moudrkat/brainscope")
+    T["foot2"] = ""
 
 Q2 = (["What's the average of", "the boiling points of", "water and ethanol, in °C?"]
       if LOGIT_ONLY else

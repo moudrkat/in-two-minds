@@ -16,19 +16,21 @@ final layers flip the decision — and `hesitation.py` turns that into two
 numbers per request:
 
 - **settle depth** — the first layer from which the winner stays on top.
+- **decision margin** — p(picked) − p(rival) in the final layer's readout,
+  i.e. in the distribution the token was sampled from.
 - **rival peak** — the losing tool's best probability, at the choice token
   and anywhere earlier in the generation.
 
-That pair is the point of the demo: it's a per-request signal you could log
-in production next to latency and token counts. A tool call that settled in
-the last three layers with the rival at p=0.4 is a different beast than one
-that settled at layer 5 — even though both return the same clean JSON.
+Those are per-request signals you could log in production next to latency
+and token counts. A tool call that settled in the last three layers with
+the rival at p=0.5 is a different beast than one that settled ten layers
+earlier — even though both return the same clean JSON.
 
 ## Run it
 
 ```bash
 # 1. the instrument — any HF model brainscope can serve; traces + lens on
-pip install brainscope   # or: git clone https://github.com/moudrkat/brainscope && pip install -e .
+pip install git+https://github.com/moudrkat/brainscope
 brainscope --model qwen3-4b --traces traces/ --lens on
 
 # 2. the subject (this repo, stdlib only)
@@ -58,6 +60,23 @@ p=0.85 five layers before the end* — the decision flipped at the last
 moment. How contested these are shows up another way too: changing a
 hyphen to an em-dash in the system prompt flipped `torn_leap_ms` to the
 other tool. The clear cases don't care.
+
+The same story in the brainscope UI: traces tab, click the tool-name
+token, look down the logit-lens column. This is `torn_leap_ms`, scrubbed
+to the moment the model wrote `web`:
+
+![replay of torn_leap_ms: layers 24-34 say calculator, the top two flip to web](docs/replay-torn-leap-ms.png)
+
+Layers 24–34 all say *calculator / calculate*; the decision flips in the
+last two layers. Side by side, the same column for a clear call and the two
+torn ones (bottom = layer 1, top = layer 36 = what gets sampled):
+
+| `calc_clear` → calculator | `torn_boiling` → web_search | `torn_leap_ms` → web_search |
+|---|---|---|
+| ![calculator wins from layer 24](docs/lens-calc-clear.png) | ![lookup and calculator through the middle, web flip-flops late](docs/lens-torn-boiling.png) | ![calculate all the way up, web only in the last two rows](docs/lens-torn-leap-ms.png) |
+
+(`torn_boiling` bonus: mid-stack the model is reaching for `lookup` — a
+tool that doesn't exist.)
 
 ## Second opinion: the J-lens
 
@@ -112,23 +131,6 @@ word-family emergence tracking (`?token=calculator,calculate,calc` sums
 the family — mid-sentence a model holds concepts, not exact tokens; the
 literal token `calculator` alone reads ~0.00 there).
 
-Then open the brainscope UI, traces tab, click the tool-name token and look
-down the logit-lens column — the same story, in color, scrubbing token by
-token. This is `torn_leap_ms`, scrubbed to the moment the model wrote `web`:
-
-![replay of torn_leap_ms: layers 24-34 say calculator, the top two flip to web](docs/replay-torn-leap-ms.png)
-
-Layers 24–34 all say *calculator / calculate*; the decision flips in the
-last two layers. Side by side, the same column for a clear call and the two
-torn ones (bottom = layer 1, top = layer 36 = what gets sampled):
-
-| `calc_clear` → calculator | `torn_boiling` → web_search | `torn_leap_ms` → web_search |
-|---|---|---|
-| ![calculator wins from layer 24](docs/lens-calc-clear.png) | ![lookup and calculator through the middle, web flip-flops late](docs/lens-torn-boiling.png) | ![calculate all the way up, web only in the last two rows](docs/lens-torn-leap-ms.png) |
-
-(`torn_boiling` bonus: mid-stack the model is reaching for `lookup` — a
-tool that doesn't exist.)
-
 ## Why this matters for production agents
 
 Tool-call schemas are enforced at decode time these days; the JSON is always
@@ -144,10 +146,12 @@ was contested. Watching the layers gives you:
 
 ## Honesty note
 
-The numbers come from stored top-5 logit-lens readouts, so they are a lower
-bound (a tool missing from a layer's top-5 counts as zero), and the logit
-lens itself is a readout convention, not ground truth about the computation.
-This demo **illustrates** hesitation on your model and your prompts;
-**measuring** it properly means interventions and controls — steer the
-decision, rerun, compare. brainscope can do that part too (see its
-[steering docs](https://github.com/moudrkat/brainscope/blob/main/docs/steering.md)).
+`hesitation.py` reads stored top-5 logit-lens readouts, so its rival/strip
+numbers are a lower bound (a tool missing from a layer's top-5 counts as
+zero; the final row is exact — it is the sampling distribution).
+`foresight.py` stores hidden states and reads exact probabilities. Either
+way, a lens is a readout convention, not ground truth about the
+computation. This demo **illustrates** contested tool choices on one model
+and a hand-picked battery; **measuring** means interventions and
+controls — steer the decision, rerun, compare. brainscope can do that part
+too (see its [steering docs](https://github.com/moudrkat/brainscope/blob/main/docs/steering.md)).
