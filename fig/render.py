@@ -30,7 +30,7 @@ T = {
     "layers_note": "⋮ layers 1–20: no tool signal yet", "depth": "layer (depth →)",
     "calls": "calls",
     "lens_label": "logit lens\n“would say now”", "jlens_label": "J-lens\n“pushed toward later”",
-    "v1": "SURE — both readouts lock onto\ncalculator from layer 27\nand never look back.",
+    "v1": "SURE — from layer 27 up, both\nreadouts have calculator on top\nand it never changes.",
     "v2": "HESITATES — mid-stack it reaches for\n“lookup”, a tool it doesn't even have,\nthen flip-flops calculator ↔ web.",
     "v3": "CHANGES ITS MIND — at layer 35 of 36\nthe J-lens still says “calculator is coming”\n(p ≈ 1.0); the last layer overrides it.",
     "callout1": "one layer before the output,\nstill certain the answer\nis “calculator”",
@@ -49,7 +49,7 @@ if CZ:
         "layers_note": "⋮ vrstvy 1–20: po toolech ani stopa", "depth": "vrstva (hloubka →)",
         "calls": "volá",
         "lens_label": "logit lens\n„co by řekl teď“", "jlens_label": "J-lens\n„k čemu tlačí později“",
-        "v1": "JISTÝ — oba readouty se zamknou\nna calculator od vrstvy 27\na už nepustí.",
+        "v1": "JISTÝ — od vrstvy 27 mají oba\nreadouty na špici calculator\na už se to nezmění.",
         "v2": "VÁHÁ — uprostřed sahá po „lookup“,\ntoolu, který vůbec nemá, pak přeskakuje\ncalculator ↔ web až do konce.",
         "v3": "ROZMYSLÍ SI TO — ve vrstvě 35 z 36\nJ-lens pořád říká „přijde calculator“ (p ≈ 1,0);\nposlední vrstva to přepíše.",
         "callout1": "vrstvu před výstupem si je\npořád jistý, že odpověď\nje „calculator“",
@@ -68,8 +68,8 @@ if LOGIT_ONLY:
                      "where the agent writes the tool name" if not CZ else
                      "každá vrstva modelu smí odpovědět předčasně — čteno na tokenu, "
                      "kde agent píše jméno toolu")
-    T["v1"] = ("clear question —\ndecided by layer 27" if not CZ else
-               "jasná otázka —\nrozhodnuto od vrstvy 27")
+    T["v1"] = ("clear question — calculator\non top from layer 25 up" if not CZ else
+               "jasná otázka — od vrstvy 25\npořád vede calculator")
     T["v2"] = ("contested — mid-stack it reaches\nfor “lookup”, a tool it doesn't have" if not CZ else
                "sporná — uprostřed sahá po „lookup“,\ntoolu, který nemá")
     T["v3"] = ("calculator wins until two layers\nfrom the end — then it flips" if not CZ else

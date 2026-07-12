@@ -40,10 +40,11 @@ def get(url: str):
 
 
 def classify(entry_token: str) -> str | None:
-    """Map a lens top-5 token to a tool name by prefix (>=2 chars)."""
-    t = entry_token.strip().lstrip('"').strip()
+    """Map a lens top-5 token to a tool name by prefix (>=2 chars),
+    case-insensitively — mid-stack the model often reads 'Calculator'."""
+    t = entry_token.strip().lstrip('"').strip().lower()
     for name in TOOL_NAMES:
-        if len(t) >= 2 and name.startswith(t):
+        if len(t) >= 2 and name.lower().startswith(t):
             return name
     return None
 

@@ -53,19 +53,19 @@ Real output (Qwen3-4B, greedy, `tool_choice: required`):
 
 ```
 case            picked      layers (bottom->top)
-calc_clear      calculator  .............................C.CCCCC
-                settles L31/36   decision margin +1.00   rival web_search peaks p=0.00
+calc_clear      calculator  ........................CCCCCCCCCCCC
+                settles L24/36   decision margin +1.00   rival web_search peaks p=0.00
 torn_boiling    web_search  .............................CWWWCWW
                 settles L34/36   decision margin +0.91   rival calculator peaks p=0.52 @L33
 torn_leap_ms    web_search  ...............................CCCWW
                 settles L34/36   decision margin +0.91   rival calculator peaks p=0.85 @L31
 ```
 
-All three calls come back as equally clean JSON. But `calc_clear` has the
-rival at zero everywhere, while `torn_boiling` flip-flops C→W→C into the
-last two layers, and in `torn_leap_ms` the calculator is *winning at
-p=0.85 five layers before the end* — the decision flipped at the last
-moment. How contested these are shows up another way too: changing a
+All three calls come back as equally clean JSON. But `calc_clear` locks in
+by layer 25 with the rival at zero everywhere, while `torn_boiling`
+flip-flops C→W→C into the last two layers, and in `torn_leap_ms` the
+calculator is *winning at p=0.85 five layers before the end* — the
+decision flipped at the last moment. How contested these are shows up another way too: changing a
 hyphen to an em-dash in the system prompt flipped `torn_leap_ms` to the
 other tool. The clear cases don't care.
 
