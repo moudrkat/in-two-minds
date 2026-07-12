@@ -2,6 +2,14 @@
 
 **Catch your agent hesitating between two tools — in its activations, not its words.**
 
+> **Status: playing, not measuring.** This is an exploratory demo — raw
+> logit lens, one model, a hand-picked battery of five questions, greedy
+> decoding. Known gaps before any of it counts as evidence: a tuned lens
+> instead of the raw readout, a baseline for how deep ordinary tokens
+> settle, resampling to check whether "contested" actually predicts
+> flip rate, and many more prompts. Treat every number below as an
+> illustration.
+
 A minimal, zero-dependency demo for [brainscope](https://github.com/moudrkat/brainscope):
 an agent with two tools (`calculator`, `web_search`) gets five questions —
 two clear-cut, three deliberately torn (they need a fact *and* a computation).
