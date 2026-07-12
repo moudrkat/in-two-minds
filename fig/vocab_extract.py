@@ -15,8 +15,15 @@ layer j+1, pre-norm) uses translator j+1; row 35 arrives final-normed.
 """
 import json
 import pathlib
+import sys
 
 import torch
+
+# bfloat16, not float16: late-layer residual streams carry huge outlier
+# dimensions and pow(2) overflows fp16's range, which silently corrupts the
+# normed readout of the last ~3 layers (constant junk top-1 across cases)
+DEV = "cuda" if "--cuda" in sys.argv and torch.cuda.is_available() else "cpu"
+DTYPE = torch.bfloat16 if DEV == "cuda" else torch.float32
 from safetensors import safe_open
 from transformers import AutoConfig, AutoTokenizer
 
@@ -38,8 +45,8 @@ FAMILIES = {
 cfg = AutoConfig.from_pretrained(MODEL)
 tok = AutoTokenizer.from_pretrained(MODEL)
 sd = torch.load(LENS, map_location="cpu")
-translators = {int(k.split(".")[0]): (sd[f"{k.split('.')[0]}.weight"].float(),
-                                      sd[f"{k.split('.')[0]}.bias"].float())
+translators = {int(k.split(".")[0]): (sd[f"{k.split('.')[0]}.weight"].to(DEV, DTYPE),
+                                      sd[f"{k.split('.')[0]}.bias"].to(DEV, DTYPE))
                for k in sd if k.endswith(".weight")}
 
 from huggingface_hub import snapshot_download
@@ -51,7 +58,9 @@ for name in ("model.norm.weight", head_key):
     shard = pathlib.Path(snapshot_download(MODEL, allow_patterns=[index[name]])) / index[name]
     with safe_open(str(shard), framework="pt") as f:
         weights[name] = f.get_tensor(name).float()
-norm_w, head_w = weights["model.norm.weight"], weights[head_key]
+norm_w = weights["model.norm.weight"].to(DEV, DTYPE)
+head_w = weights[head_key].to(DEV, DTYPE)
+print(f"device: {DEV} ({DTYPE})")
 
 # family word -> set of first-token ids, with and without leading space
 fam_ids = {}
@@ -67,12 +76,13 @@ print({f: len(i) for f, i in fam_ids.items()})
 
 
 def rmsnorm(h):
-    return h / torch.sqrt(h.pow(2).mean(-1, keepdim=True) + cfg.rms_norm_eps) * norm_w
+    var = h.float().pow(2).mean(-1, keepdim=True) + cfg.rms_norm_eps
+    return (h.float() / torch.sqrt(var)).to(h.dtype) * norm_w
 
 
 def probs(z, normed_already=False):
     zn = z if normed_already else rmsnorm(z)
-    return torch.softmax(zn @ head_w.T, dim=-1)
+    return torch.softmax((zn @ head_w.T).float(), dim=-1)   # softmax in fp32
 
 
 def tool_token_index(all_tokens):
@@ -97,7 +107,7 @@ for f in sorted(TRACES.glob("*.json")):
     if k is None:
         print(f"{case}: no tool token, skipped")
         continue
-    hidden = torch.load(hf, map_location="cpu").float()
+    hidden = torch.load(hf, map_location="cpu").to(DEV, DTYPE)
     li = k - t.get("capture_offset", 0)
     if not (0 <= li < hidden.shape[0]):
         print(f"{case}: tool token outside captured steps, skipped")

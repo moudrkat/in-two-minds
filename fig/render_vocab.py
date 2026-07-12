@@ -27,9 +27,9 @@ C_CALC, C_WEB, C_GEN = "#c98500", "#3987e5", "#2fa889"   # validated triple
 
 CZ = "cz" in sys.argv[1:]
 T = {
-    "handoff_title": "The handoff: capability words first, the schema name last",
+    "handoff_title": "The handoff: capability tokens first, the schema name last",
     "handoff_sub": "mean exact tuned-lens probability at the tool-name token, %d questions · "
-                   "the model thinks in generic verbs mid-stack and snaps to the tool's literal name late",
+                   "mid-stack readouts are dominated by capability tokens; probability mass moves to the schema name in the last layers",
     "web_panel": "cases that called web_search (n=%d)",
     "calc_panel": "cases that called calculator (n=%d)",
     "s_schema_web": "“web_search” (schema name)",
@@ -40,7 +40,7 @@ T = {
     "s_rival_web": "“web_search” (rival schema)",
     "layer": "layer (depth →)",
     "meanp": "mean p (exact, tuned lens)",
-    "casc_title": "The words in the middle — what the model calls its tools before it knows their names",
+    "casc_title": "Mid-stack vocabulary — which tokens top the tuned-lens readout at each depth",
     "casc_sub": "share of cases where the token is tuned-lens top-1 at that layer · rows sorted by where they peak · %d questions",
     "casc_web": "cases that called web_search",
     "casc_calc": "cases that called calculator",
@@ -51,9 +51,9 @@ T = {
 }
 if CZ:
     T = {
-        "handoff_title": "Předávka: napřed slova o schopnostech, jméno toolu až nakonec",
+        "handoff_title": "Předávka: napřed capability tokeny, jméno ze schématu až nakonec",
         "handoff_sub": "průměrné exaktní p (tuned lens) na tokenu jména toolu, %d otázek · "
-                       "uprostřed sítě model myslí v obecných slovesech, na doslovné jméno přepne pozdě",
+                       "readoutům středních vrstev dominují obecné capability tokeny; masa se na jméno přesune až v posledních vrstvách",
         "web_panel": "cases volající web_search (n=%d)",
         "calc_panel": "cases volající calculator (n=%d)",
         "s_schema_web": "„web_search“ (jméno ze schématu)",
@@ -64,7 +64,7 @@ if CZ:
         "s_rival_web": "„web_search“ (rival)",
         "layer": "vrstva (hloubka →)",
         "meanp": "průměrné p (exaktní, tuned lens)",
-        "casc_title": "Slova uprostřed — jak model říká svým toolům, než zná jejich jména",
+        "casc_title": "Slovník středních vrstev — které tokeny vedou tuned-lens readout v které hloubce",
         "casc_sub": "podíl cases, kde je token tuned-lens top-1 v dané vrstvě · řádky seřazené podle vrcholu · %d otázek",
         "casc_web": "cases volající web_search",
         "casc_calc": "cases volající calculator",
