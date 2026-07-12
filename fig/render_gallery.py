@@ -2,6 +2,9 @@
 verdict per case computed from the data. Run fig/extract.py and
 fig/tlens_extract.py first, merge into figdata_gallery.json, then:
 uv run --with matplotlib --no-project python3 fig/render_gallery.py [cz]
+
+Single-lens variants (verdicts then use only the shown lens):
+uv run --with matplotlib --no-project python3 fig/render_gallery.py [cz] logit|tuned|jlens
 """
 import json
 import sys
@@ -51,7 +54,24 @@ if CZ:
                 "tohle ilustruje; měřit znamená zasáhnout · brainscope — github.com/moudrkat/brainscope",
     }
 
-KEYS = ["lens", "tlens", "jlens"]
+ONLY = next((a for a in sys.argv[1:] if a in ("logit", "tuned", "jlens")), None)
+KEYS = {"logit": ["lens"], "tuned": ["tlens"], "jlens": ["jlens"]}[ONLY] if ONLY \
+    else ["lens", "tlens", "jlens"]
+if ONLY:
+    SOLO = {
+        "logit": ("raw logit lens", "what each layer would say if generation stopped there",
+                  "raw logit lens", "co by každá vrstva řekla, kdyby generování skončilo tam"),
+        "tuned": ("tuned lens (Belrose et al. 2023)", "the logit lens with trained per-layer corrections",
+                  "tuned lens (Belrose et al. 2023)", "logit lens s natrénovanou korekcí po vrstvách"),
+        "jlens": ("J-lens (Anthropic 2026)", "what each layer pushes the model to say later",
+                  "J-lens (Anthropic 2026)", "k čemu každá vrstva tlačí model později"),
+    }[ONLY]
+    T["title"] = ("Twelve questions through the " if not CZ else "Dvanáct otázek přes ") \
+        + (SOLO[0] if not CZ else SOLO[2])
+    T["subtitle"] = ("per-layer readout at the token where the agent writes the tool name · "
+                     if not CZ else
+                     "čtení po vrstvách na tokenu, kde agent píše jméno toolu · ") \
+        + (SOLO[1] if not CZ else SOLO[3])
 
 
 def classify(tok: str) -> str | None:
@@ -93,9 +113,10 @@ ORDER = [c for c in (
 NCOL = 4
 NROW = (len(ORDER) + NCOL - 1) // NCOL
 
-COL_W, CELL_H = 1.28, 0.30
+COL_W, CELL_H = (2.2, 0.30) if ONLY else (1.28, 0.30)
 PANEL_W = len(KEYS) * COL_W + (len(KEYS) - 1) * 0.06
-PANEL_GAP_X, PANEL_GAP_Y = 0.85, 1.05
+PANEL_GAP_X, PANEL_GAP_Y = (1.5, 1.05) if ONLY else (0.85, 1.05)
+QWRAP = 30 if ONLY else 34
 HEAD_H = 1.55                                # question + chip + col labels
 GRID_H = len(LAYERS) * CELL_H
 PANEL_H = HEAD_H + GRID_H + 0.55             # + verdict line
@@ -136,7 +157,7 @@ for idx, case in enumerate(ORDER):
     gy = py + 0.55                            # grid bottom
     gt = gy + GRID_H                          # grid top
 
-    qlines = textwrap.wrap("“" + d["q"] + "”", 34)[:3]
+    qlines = textwrap.wrap("“" + d["q"] + "”", QWRAP)[:3]
     for li, line in enumerate(qlines):
         ax.text(px + PANEL_W / 2, gt + HEAD_H - 0.10 - li * 0.26, line,
                 ha="center", va="center", color=INK, fontsize=9.5,
@@ -151,8 +172,9 @@ for idx, case in enumerate(ORDER):
 
     for ci, key in enumerate(KEYS):
         cx = px + ci * (COL_W + 0.06)
-        ax.text(cx + COL_W / 2, gt + 0.18, T["cols"][ci], ha="center",
-                va="center", color=MUTED, fontsize=8, family="sans-serif")
+        if not ONLY:
+            ax.text(cx + COL_W / 2, gt + 0.18, T["cols"][ci], ha="center",
+                    va="center", color=MUTED, fontsize=8, family="sans-serif")
         for r, layer in enumerate(LAYERS):
             y = gy + r * CELL_H
             e = d[key][layer][0]
@@ -171,8 +193,12 @@ for idx, case in enumerate(ORDER):
             tok = e["t"].strip()
             if not all(ord(c) < 0x2500 for c in tok):
                 tok = "···"
-            if len(tok) > 9:
-                tok = tok[:8] + "…"
+            maxlen = 13 if ONLY else 9
+            if len(tok) > maxlen:
+                tok = tok[:maxlen - 1] + "…"
+            if ONLY and tool and p >= 0.3:
+                ax.text(cx + COL_W - 0.08, y + CELL_H / 2, f"{p:.2f}", ha="right",
+                        va="center", color=tc, fontsize=6.5, family="monospace", alpha=0.85)
             ax.text(cx + 0.08, y + CELL_H / 2, tok, ha="left", va="center",
                     color=tc, fontsize=7, family="monospace",
                     fontweight="bold" if tool else "normal")
@@ -187,8 +213,9 @@ for idx, case in enumerate(ORDER):
     ax.text(px + PANEL_W / 2, gy - 0.28, label, ha="center", va="center",
             color=vc, fontsize=9.5, family="sans-serif", fontweight="bold")
 
-ax.text(x00 - 0.9, 0.32, T["foot"], color=MUTED, fontsize=9, family="sans-serif")
+for fi, fline in enumerate(textwrap.wrap(T["foot"], int((fig_w - 1.2) / 0.075))):
+    ax.text(x00 - 0.9, 0.52 - fi * 0.28, fline, color=MUTED, fontsize=9, family="sans-serif")
 
-name = "fig_gallery_" + ("cz" if CZ else "en")
+name = "fig_gallery_" + (ONLY + "_" if ONLY else "") + ("cz" if CZ else "en")
 fig.savefig(f"{SCRATCH}/{name}.png", facecolor=PAGE, bbox_inches="tight", pad_inches=0.25)
 print("saved", name)
