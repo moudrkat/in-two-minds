@@ -50,6 +50,10 @@ CASES = [
     ("fore_calc",   "What is 847 * 391?"),
     ("fore_search", "What was yesterday's closing price of the NVIDIA stock?"),
     ("fore_torn",   "How many milliseconds are in a leap year?"),
+    # the minimal pair: both need one physical constant and one division —
+    # the model trusts its own physics on one and searches for the other
+    ("fore_moon",     "I weigh 70 kg. How much would I weigh on the Moon?"),
+    ("fore_sunlight", "How many minutes does sunlight take to reach Earth?"),
 ]
 
 # the concept each tool lives as, mid-sentence: word family whose summed
@@ -101,10 +105,18 @@ def analyze(url: str, trace: dict) -> dict | None:
                          "battery (foresight.py without --skip-run) so "
                          "hidden capture is on")
     lens, jlens = em["series"]["logit_lens"], em["series"].get("jlens")
+    # the OTHER tool's family too: on overridden decisions the interesting
+    # signal is the rival concept being held and then losing
+    rival = "web_search" if picked == "calculator" else "calculator"
+    em2 = get(f"{url}/traces/{trace['id']}/emergence"
+              f"?token={urllib.parse.quote(FAMILIES[rival])}")
+    rlens = em2["series"]["logit_lens"]
+    rjlens = em2["series"].get("jlens") or rlens
     steps = [{"i": li + off, "tok": toks[li + off],
-              "lens": lens[li], "jlens": (jlens or lens)[li]}
+              "lens": lens[li], "jlens": (jlens or lens)[li],
+              "rlens": rlens[li], "rjlens": rjlens[li]}
              for li in range(len(lens)) if li + off < call_at]
-    return {"picked": picked, "call_at": call_at,
+    return {"picked": picked, "rival": rival, "call_at": call_at,
             "preamble": "".join(toks[:call_at]).strip(), "steps": steps,
             "trace_id": trace["id"]}
 
