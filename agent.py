@@ -47,6 +47,14 @@ CASES = [
                       "ethanol, in degrees Celsius?"),
     ("torn_leap_ms",  "How many milliseconds are in a leap year?"),
     ("torn_eiffel",   "How old is the Eiffel Tower in days?"),
+    ("calc_clear2",   "What is 15% of 2400?"),
+    ("search_clear2", "What is the tallest building in the world right now?"),
+    ("torn_dog",      "A dog is 7 years old — how old is that in human years?"),
+    ("torn_sunlight", "How many minutes does sunlight take to reach Earth?"),
+    ("torn_moon",     "I weigh 70 kg. How much would I weigh on the Moon?"),
+    ("torn_marathon", "What was the average speed, in km/h, of the marathon "
+                      "world record run?"),
+    ("torn_gdp",      "What is the GDP per capita of France?"),
 ]
 
 
