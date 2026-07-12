@@ -163,3 +163,7 @@ computation. This demo **illustrates** contested tool choices on one model
 and a hand-picked battery; **measuring** means interventions and
 controls — steer the decision, rerun, compare. brainscope can do that part
 too (see its [steering docs](https://github.com/moudrkat/brainscope/blob/main/docs/steering.md)).
+
+## License
+
+[MIT](LICENSE)
