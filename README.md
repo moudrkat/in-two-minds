@@ -2,10 +2,10 @@
 
 **Catch your agent hesitating between two tools — in its activations, not its words.**
 
-> **Status: an experiment, not research.** One model, template batteries,
-> greedy decoding, readouts without interventions. I claim curiosity, not
-> novelty: pointers to real work are at the bottom, and every number here
-> is an illustration until someone steers the decision and reruns.
+> **Status: work in progress — and an open playground.** One model,
+> template batteries, greedy decoding, readouts without interventions;
+> steering is the next step. The numbers are real, but they are read-only —
+> treat them as illustrations until the intervention experiments land.
 > Limitations are listed honestly below — grill me.
 
 Agents sometimes pick the wrong tool. It annoys me every time, and what
@@ -146,7 +146,13 @@ so the geometry is exact. Three stages, same in both tool directions:
 
 On the torn constant+math group the river visibly **forks** — 122 cases
 end blue (`web_search`), 114 orange (`calculator`), fed by the same
-capability words. And the fork is asymmetric in a specific way: in cases
+capability words. And that group's mid-stack vocabulary is compute-flavored
+even for its web-bound half (`calculate` tops 419 layer-readouts in L21–33,
+`search` twice) — the cases that end on `web_search` get there without ever
+passing through retrieval words. One more vocabulary split: `google`, which
+shows up persistently in the J-lens readouts of the gallery, never tops the
+tuned-lens readout anywhere in the census — "would say now, corrected" and
+"pushed toward later" speak noticeably different dialects. And the fork is asymmetric in a specific way: in cases
 that end on `web_search`, the rival name `calculator` rises late (mean
 p=0.17 @L34; top-1 in 16% of web-bound cases somewhere in L33–35). The
 reverse — `web` rising late in calculator-bound cases — is absent across
