@@ -149,10 +149,12 @@ end blue (`web_search`), 114 orange (`calculator`), fed by the same
 capability words. And that group's mid-stack vocabulary is compute-flavored
 even for its web-bound half (`calculate` tops 419 layer-readouts in L21–33,
 `search` twice) — the cases that end on `web_search` get there without ever
-passing through retrieval words. One more vocabulary split: `google`, which
-shows up persistently in the J-lens readouts of the gallery, never tops the
-tuned-lens readout anywhere in the census — "would say now, corrected" and
-"pushed toward later" speak noticeably different dialects. And the fork is asymmetric in a specific way: in cases
+passing through retrieval words. One more vocabulary split: `google` is a
+J-lens favorite (top-1 through layers ~21–31 in most gallery cases) but
+never wins the tuned-lens readout anywhere in the census — it appears 207×
+in the tuned top-8 around L28 and always loses to `query` or `search`.
+"Would say now, corrected" and "pushed toward later" speak noticeably
+different dialects. And the fork is asymmetric in a specific way: in cases
 that end on `web_search`, the rival name `calculator` rises late (mean
 p=0.17 @L34; top-1 in 16% of web-bound cases somewhere in L33–35). The
 reverse — `web` rising late in calculator-bound cases — is absent across
