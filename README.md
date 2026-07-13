@@ -168,6 +168,10 @@ computed. It may be computed earlier, or at other token positions, and only
 rotate into view late. Localization is a causal claim and needs activation
 patching, which this census does not do.
 
+Every figure in this repo is explained in
+[docs/figures.md](docs/figures.md) — what it shows, how to read it, the
+caveat that matters, and the one command that regenerates it.
+
 Companion figures: family curves
 ([docs/fig_vocab_handoff_en.png](docs/fig_vocab_handoff_en.png)), token
 cascade ([docs/fig_vocab_cascade_en.png](docs/fig_vocab_cascade_en.png)),
