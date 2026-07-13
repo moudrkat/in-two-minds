@@ -39,6 +39,7 @@ CZ = "cz" in sys.argv[1:]
 BY_GROUP = "groups" in sys.argv[1:]
 GROUP_NAMES = ("clear_calc", "clear_search", "torn_const", "torn_fact")
 ONE_GROUP = next((a for a in sys.argv[1:] if a in GROUP_NAMES), None)
+TOP3 = "top3" in sys.argv[1:]   # band height = mean p of top-3/layer union
 T = {
     "title": "The readout river — top-1 token composition by depth",
     "sub": "at each layer, all cases split by which token tops the tuned-lens readout at the tool-name token · "
@@ -71,8 +72,28 @@ N_BANDS = 11
 
 
 def river(cases):
-    counts = defaultdict(lambda: [0] * 36)
     n = len(cases)
+    if TOP3:
+        # band height = mean exact p (top-8 lower bound); bands = the union
+        # of each layer's three highest-mean tokens
+        acc = defaultdict(lambda: [0.0] * 36)
+        for v in cases.values():
+            for l in range(36):
+                for e in v["top8"]["tuned"][l]:
+                    t = e["t"].strip().lstrip('"').strip().lower()
+                    if len(t) >= 2:
+                        acc[t][l] += e["p"] / n
+        union = set()
+        for l in range(36):
+            union |= {t for t, _ in
+                      sorted(acc.items(), key=lambda kv: -kv[1][l])[:3]}
+        keep = sorted(union, key=lambda t: -max(acc[t]))[:N_BANDS + 4]
+        keep.sort(key=lambda t: max(range(36), key=lambda l: acc[t][l]))
+        bands = {t: acc[t] for t in keep}
+        other = [max(0.0, 1 - sum(bands[t][l] for t in keep))
+                 for l in range(36)]
+        return bands, other
+    counts = defaultdict(lambda: [0] * 36)
     for v in cases.values():
         for l in range(36):
             t = v["top8"]["tuned"][l][0]["t"].strip().lstrip('"').strip().lower()
@@ -95,6 +116,17 @@ def color_for(tok, gi, ti):
     c = GRAYS[gi[0] % len(GRAYS)]; gi[0] += 1
     return c
 
+
+if TOP3:
+    T["title"] = ("The readout river, weighted — mean probability of the top tokens by depth"
+                  if not CZ else
+                  "Řeka readoutů, vážená — průměrné p nejsilnějších tokenů po hloubce")
+    T["sub"] = ("band height = mean exact probability (top-3 tokens per layer, top-8 lower bound) · %d questions · "
+                "dark space = the rest of the distribution — diffuse until ~L24"
+                if not CZ else
+                "výška pruhu = průměrné exaktní p (top-3 tokeny na vrstvu, top-8 dolní odhad) · %d otázek · "
+                "tmavý prostor = zbytek distribuce — do ~L24 rozptýlená")
+    T["share"] = "mean p" if not CZ else "průměrné p"
 
 GROUP_TITLES = {
     "clear_calc": ("clear arithmetic (n=%d)", "čistá aritmetika (n=%d)"),
@@ -162,7 +194,8 @@ for ax, (cases, ptitle) in zip(axes, PANELS):
 axes[-1].set_xlabel(T["layer"], color=MUTED, fontsize=9.5)
 fig.text(0.01, 0.005, T["foot"], color=MUTED, fontsize=8, family="sans-serif")
 
-name = "fig_vocab_river_" + (f"{ONE_GROUP}_" if ONE_GROUP else
-                             "groups_" if BY_GROUP else "") + ("cz" if CZ else "en")
+name = "fig_vocab_river_" + ("top3_" if TOP3 else "") \
+    + (f"{ONE_GROUP}_" if ONE_GROUP else
+       "groups_" if BY_GROUP else "") + ("cz" if CZ else "en")
 fig.savefig(f"{HERE}/{name}.png", facecolor=PAGE, bbox_inches="tight", pad_inches=0.3)
 print("saved", name)
