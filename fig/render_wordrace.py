@@ -50,7 +50,7 @@ T = {
     "sub": "each word sits at the decoder layer where its mean tuned-lens probability peaks, sized by that peak · "
            "%d questions · top-8 readouts (a lower bound)",
     "sub_case": "each word = a token in the tuned-lens readout at the token where the agent writes the tool name ·\n"
-                "word position & line = its probability across depth, word size = its peak",
+                "word position & line = its probability across depth, word size = its peak · case/spacing variants of a word are summed",
     "web": "cases that called web_search (n=%d)",
     "calc": "cases that called calculator (n=%d)",
     "xlabel": "decoder layer ℓ  (computation depth →, 36 layers total)",
@@ -59,7 +59,7 @@ T = {
     "ann_mid": "mid-stack, the readout reaches\nfor computing: “calculate”, then\n“calculator” — the other racer",
     "ann_end": "the last two layers flip it —\n“web” wins and web_search\nis what gets called",
     "foot": "Qwen3-4B · tuned lens (Belrose et al. 2023): logit lens with trained per-layer corrections · "
-            "battery: vocab.py · brainscope — github.com/moudrkat/brainscope",
+            "playground: github.com/moudrkat/in-two-minds · instrument: brainscope — github.com/moudrkat/brainscope",
 }
 if CZ:
     T = {
@@ -68,7 +68,7 @@ if CZ:
         "sub": "každé slovo sedí ve vrstvě, kde vrcholí jeho průměrné tuned-lens p, velikost = ten vrchol · "
                "%d otázek · top-8 readouty (dolní odhad)",
         "sub_case": "každé slovo = token v tuned-lens readoutu na tokenu, kde agent píše jméno toolu ·\n"
-                    "pozice slova a čára = jeho pravděpodobnost po hloubce, velikost slova = vrchol",
+                    "pozice slova a čára = jeho pravděpodobnost po hloubce, velikost slova = vrchol · varianty slova (velikost písmen/mezera) sečteny",
         "web": "cases volající web_search (n=%d)",
         "calc": "cases volající calculator (n=%d)",
         "xlabel": "vrstva dekodéru ℓ  (hloubka výpočtu →, celkem 36 vrstev)",
@@ -77,7 +77,7 @@ if CZ:
         "ann_mid": "uprostřed sítě readout sahá\npo počítání: „calculate“, pak\n„calculator“ — druhý závodník",
         "ann_end": "poslední dvě vrstvy to překlopí —\nvyhraje „web“ a volá se\nweb_search",
         "foot": "Qwen3-4B · tuned lens (Belrose et al. 2023): logit lens s natrénovanou korekcí po vrstvách · "
-                "battery: vocab.py · brainscope — github.com/moudrkat/brainscope",
+                "hřiště: github.com/moudrkat/in-two-minds · nástroj: brainscope — github.com/moudrkat/brainscope",
     }
 
 GENERIC = {"search", "lookup", "look", "query", "google", "api", "database",
@@ -175,7 +175,7 @@ def draw_panel(ax, cs, ptitle, ylabel, annotate_flip=False):
 
 if ONE_CASE:
     v = DATA[ONE_CASE]
-    cs = curves({ONE_CASE: v}, min_peak=0.05)
+    cs = curves({ONE_CASE: v}, min_peak=0.012, max_words=14)
     prompt = case_prompt(ONE_CASE)
     fig, ax = plt.subplots(figsize=(12.0, 6.4), dpi=160)
     fig.patch.set_facecolor(PAGE)
