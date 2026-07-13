@@ -93,7 +93,9 @@ GROUP_TITLES = {
 
 
 def case_prompt(case_id):
-    """census stores no prompts; the battery is deterministic, regenerate"""
+    if DATA[case_id].get("prompt"):
+        return DATA[case_id]["prompt"]
+    # older census files store no prompts; the battery is deterministic
     sys.path.insert(0, os.path.dirname(HERE))
     import vocab
     groups = dict(vocab.big_groups()) if "_b" in case_id else dict(vocab.GROUPS)

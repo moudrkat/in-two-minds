@@ -127,6 +127,39 @@ torn fact+math (n=141, "How old is the Eiffel Tower in days?") — and
 `fig/vocab_extract.py` decodes every layer at the tool-name token with the
 tuned lens, full softmax, no top-k cutoff.
 
+Run it end to end (times from an RTX 4070 Ti SUPER):
+
+```bash
+# 1. the instrument — traces + lens on (vocab.py switches hidden capture on itself)
+brainscope --model qwen3-4b --traces traces/ --lens on
+
+# 2. the battery — 815 questions, ~35 min
+python vocab.py --big
+
+# 3. a tuned lens for the served model — one-time, ~2 h
+pip install tuned-lens
+python -m tuned_lens train --model.name Qwen/Qwen3-4B-Instruct-2507 \
+    --data.name wikitext wikitext-103-raw-v1 --split train \
+    --max_length 1024 --num_steps 250 --tokens_per_step 16384 \
+    --output lenses/qwen3-4b-instruct-2507-tuned-lens
+# (tuned-lens 0.2.0 vs recent transformers needs three small fixes:
+#  pip install --no-deps torchdata==0.7.1; add Qwen3Model beside LlamaModel
+#  in tuned_lens/model_surgery.py; drop the load_in_8bit kwarg in
+#  tuned_lens/scripts/ingredients.py)
+
+# 4. exact readouts at the tool-name token (bf16 on GPU)
+python fig/vocab_extract.py --traces traces/ --cuda
+
+# 5. any figure, one command each
+python fig/render_vocab_river.py groups
+python fig/render_wordrace.py case:torn_const_b207 light
+```
+
+The repo ships `fig/vocab_census.json` (the full 815-question extraction,
+prompts included), so every figure also regenerates **without a GPU and
+without the lens** — steps 1–4 are only needed to reproduce the data
+itself or run your own battery.
+
 ![the readout river, one panel per question group](docs/fig_vocab_river_groups_en.png)
 
 At each layer, all cases split by their top-1 token; shares sum to 100%,

@@ -14,18 +14,24 @@ final-normed (HF convention) and reads out through the head directly.
 Sanity check: recomputes the raw logit lens per row and reports top-1
 agreement with the readouts recorded in the trace.
 """
+import argparse
 import json
 import pathlib
-import sys
 
 import torch
 from safetensors import safe_open
 from transformers import AutoConfig, AutoTokenizer
 
-TRACES = pathlib.Path("/workspace/traces-demo6")
-LENS = pathlib.Path("/lens/qwen3-4b-instruct-2507-tuned-lens/params.pt")
-MODEL = "Qwen/Qwen3-4B-Instruct-2507"
-OUT = pathlib.Path("/workspace/tlens_figdata.json")
+ap = argparse.ArgumentParser()
+ap.add_argument("--traces", default="traces", help="brainscope trace dir")
+ap.add_argument("--lens", default="lenses/qwen3-4b-instruct-2507-tuned-lens/params.pt")
+ap.add_argument("--model", default="Qwen/Qwen3-4B-Instruct-2507")
+ap.add_argument("--out", default="fig/tlens_figdata.json")
+args = ap.parse_args()
+TRACES = pathlib.Path(args.traces)
+LENS = pathlib.Path(args.lens)
+MODEL = args.model
+OUT = pathlib.Path(args.out)
 
 cfg = AutoConfig.from_pretrained(MODEL)
 tok = AutoTokenizer.from_pretrained(MODEL)

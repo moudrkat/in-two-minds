@@ -380,7 +380,8 @@ def main():
                              {"role": "user", "content": prompt}],
                 "tools": TOOLS, "tool_choice": "required",
                 "temperature": 0, "max_tokens": 400,
-                "metadata": {"demo": "vocab-census", "case": case},
+                "metadata": {"demo": "vocab-census", "case": case,
+                             "prompt": prompt},
             })["choices"][0]["message"]
             call = (msg.get("tool_calls") or [{}])[0].get("function", {})
             done += 1

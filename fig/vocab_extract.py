@@ -4,33 +4,43 @@ per layer under the tuned lens and the raw logit lens, plus EXACT summed
 probabilities of concept families (schema names vs generic capability
 words) — no top-k truncation, full softmax over the vocabulary.
 
-Runs where the model's weights and the traces live (the brainscope host),
-e.g. in the experiments container:
-  python3 fig/vocab_extract.py
-Paths below assume /workspace = trace dir parent, /lens = tuned lens dir.
-Writes /workspace/vocab_census.json; render with fig/render_vocab.py.
+Runs where the model's weights and the traces live (the brainscope host):
+  python fig/vocab_extract.py --traces traces/ \
+      --lens lenses/<model>-tuned-lens/params.pt [--cuda]
+Writes fig/vocab_census.json; render with fig/render_vocab.py & friends.
+The lens artifact is a tuned-lens state dict (Belrose et al.) — see the
+README for the one command that trains it.
 
 Same index mapping as tlens_extract.py: stored stack row j (output of
 layer j+1, pre-norm) uses translator j+1; row 35 arrives final-normed.
 """
+import argparse
 import json
 import pathlib
-import sys
 
 import torch
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--traces", default="traces", help="brainscope trace dir")
+ap.add_argument("--lens", default="lenses/qwen3-4b-instruct-2507-tuned-lens/params.pt",
+                help="tuned-lens params.pt for the served model")
+ap.add_argument("--model", default="Qwen/Qwen3-4B-Instruct-2507")
+ap.add_argument("--out", default="fig/vocab_census.json")
+ap.add_argument("--cuda", action="store_true")
+args = ap.parse_args()
 
 # bfloat16, not float16: late-layer residual streams carry huge outlier
 # dimensions and pow(2) overflows fp16's range, which silently corrupts the
 # normed readout of the last ~3 layers (constant junk top-1 across cases)
-DEV = "cuda" if "--cuda" in sys.argv and torch.cuda.is_available() else "cpu"
+DEV = "cuda" if args.cuda and torch.cuda.is_available() else "cpu"
 DTYPE = torch.bfloat16 if DEV == "cuda" else torch.float32
 from safetensors import safe_open
 from transformers import AutoConfig, AutoTokenizer
 
-TRACES = pathlib.Path("/workspace/traces-demo6")
-LENS = pathlib.Path("/lens/qwen3-4b-instruct-2507-tuned-lens/params.pt")
-MODEL = "Qwen/Qwen3-4B-Instruct-2507"
-OUT = pathlib.Path("/workspace/vocab_census.json")
+TRACES = pathlib.Path(args.traces)
+LENS = pathlib.Path(args.lens)
+MODEL = args.model
+OUT = pathlib.Path(args.out)
 
 FAMILIES = {
     "schema_calc": ["calculator", "Calculator"],
@@ -117,6 +127,7 @@ for f in sorted(TRACES.glob("*.json")):
         t["all_tokens"][k].strip().lstrip('"')) else "web_search"
 
     rec = {"group": case.rsplit("_", 1)[0], "picked": picked,
+           "prompt": tags.get("prompt", ""),
            "top8": {"tuned": [], "raw": []},
            "fam": {"tuned": {fam: [] for fam in FAMILIES},
                    "raw": {fam: [] for fam in FAMILIES}}}
