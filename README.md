@@ -8,6 +8,10 @@
 > treat them as illustrations until the intervention experiments land.
 > Limitations are listed honestly below — grill me.
 
+**No GPU?** Every figure regenerates from the shipped census JSON
+(`fig/vocab_census.json`): `python fig/render_vocab_river.py groups` —
+no model, no lens.
+
 Agents sometimes pick the wrong tool. It annoys me every time, and what
 annoys me most is that the failure looks clean: the call is valid JSON, the
 arguments parse, a wrong call looks exactly like a right call. The standard
@@ -195,11 +199,9 @@ every battery so far. When this model's late layers override the earlier
 tendency, the override has one direction: away from computing, toward
 looking up.
 
-Careful with "where does the choice happen", though: a readout can only
-show where the choice becomes *readable* in this basis, not where it is
-computed. It may be computed earlier, or at other token positions, and only
-rotate into view late. Localization is a causal claim and needs activation
-patching, which this census does not do.
+Careful with "where does the choice happen", though: a readout shows
+where the choice becomes *readable*, not where it is computed (see
+Limitations).
 
 Every figure in this repo is explained in
 [docs/figures.md](docs/figures.md) — what it shows, how to read it, the
@@ -274,6 +276,11 @@ the JSON was contested. Watching the layers gives you:
    a 0.9 win). The handoff curves use exact probabilities; read them
    together. `hesitation.py`'s strips read stored top-5, a lower bound;
    `foresight.py` and the census read exact stored hidden states.
+8. **Localization is a causal claim.** A readout can only show where the
+   choice becomes *readable* in this basis, not where it is computed. It
+   may be computed earlier, or at other token positions, and only rotate
+   into view late. Answering that needs activation patching, which this
+   census does not do.
 
 ## Reading that shaped this
 
