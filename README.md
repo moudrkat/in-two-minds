@@ -8,9 +8,16 @@
 > treat them as illustrations until the intervention experiments land.
 > Limitations are listed honestly below — grill me.
 
-**No GPU?** Every figure regenerates from the shipped census JSON
-(`fig/vocab_census.json`): `python fig/render_vocab_river.py groups` —
-no model, no lens.
+## ⚡ Run in 30 s (no GPU)
+
+```bash
+git clone https://github.com/moudrkat/in-two-minds && cd in-two-minds
+python fig/render_vocab_river.py groups   # stdlib only — no model, no lens
+```
+
+Every figure regenerates from the shipped census JSON
+(`fig/vocab_census.json`). The live experiment on a real model is two
+commands more ([below ↓](#the-one-token-experiment)).
 
 Agents sometimes pick the wrong tool. It annoys me every time, and what
 annoys me most is that the failure looks clean: the call is valid JSON, the
@@ -302,6 +309,39 @@ actually did:
 - *Beyond the Black Box: Interpretability of Agentic AI Tool Use* (2026).
   arXiv:2605.06890 — SAE probes that predict tool decisions from
   activations; the serious version of "monitor the choice, not the JSON".
+
+## Where this sits in the lab
+
+```mermaid
+flowchart LR
+    hd["🧭 hidden-directions<br/>behavior → vector"]
+    bs(["🧠 brainscope<br/>watch the model think"])
+    hw["🔥 hotwire-vllm<br/>steering in production"]
+    st["🕹️ steeropathy<br/>agents talk via activations"]
+    tm["⚖️ in-two-minds<br/>agent hesitating between tools"]
+    sm["🧪 steering-mechanics<br/>how steering actually works"]
+
+    hd -->|vectors| bs
+    hd -->|vector + passport| hw
+    bs --> st
+    bs --> tm
+    bs -->|causal replay| sm
+    hw -.->|vector under study| sm
+
+    click hd "https://github.com/moudrkat/hidden-directions"
+    click bs "https://github.com/moudrkat/brainscope"
+    click hw "https://github.com/moudrkat/hotwire-vllm"
+    click st "https://github.com/moudrkat/steeropathy"
+    click tm "https://github.com/moudrkat/in-two-minds"
+    click sm "https://github.com/moudrkat/steering-mechanics"
+
+    classDef dim fill:#f6f8fa,stroke:#d0d7de,color:#57606a;
+    classDef here fill:#8957e5,stroke:#6e40c9,color:#ffffff;
+    class hd,bs,hw,st,tm,sm dim;
+    class tm here;
+```
+
+*Highlighted = this repo. The full lab map (with the two other repos' stories) lives on [moudrkat](https://github.com/moudrkat).*
 
 ## License
 
