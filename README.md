@@ -2,6 +2,10 @@
 
 **Catch your agent hesitating between two tools — in its activations, not its words.**
 
+For anyone building tool-using agents who wants to detect a wavering
+tool choice *before* the model commits to it — by reading the decision in
+the activations rather than waiting for the output.
+
 > **Status: work in progress — and an open playground.** One model,
 > template batteries, greedy decoding, readouts without interventions;
 > steering is the next step. The numbers are real, but they are read-only —
